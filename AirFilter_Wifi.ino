@@ -252,15 +252,19 @@ void handlePWM() {
 }
 
 void connectToWifi() {
+  WiFi.begin(SSID, WifiPW);
+  Serial.println("Connecting");
+  delay(500);
   int retry = 0;   // counter for retries
   // try to connect at least 10 times
-  while (WiFi.status() != WL_CONNECTED && retry < 10)
+  while (WiFi.status() != WL_CONNECTED && retry < 20)
   {
     digitalWrite(ledPin, HIGH);
     delay(500);
     Serial.printf("Connection status: %d\n", WiFi.status());
     digitalWrite(ledPin, LOW);
     delay(500);
+    retry++;
   }
   Serial.println();
   Serial.print("Connected, IP address: ");
@@ -294,6 +298,7 @@ void saveWifiInfo() {
 void setup() {
   digitalWrite(ledPin, HIGH);
   Serial.begin(115200);
+  delay(1000);  // wait for proper connection for serial monitor
   pinMode(tachoPin, INPUT_PULLUP);
   pinMode(pwmPin, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(tachoPin), tacho, RISING);
@@ -318,14 +323,14 @@ void setup() {
   EEPROM.get(30, currentPWM2); // Night Mode
 
   // read SSID and WifiPW strings
-  delay(5000);
-  Serial.print("before SSID");
-  delay(5000);
+  //delay(5000);
+  Serial.println("before SSID");
+  //delay(5000);
   SSID = readEEPROMString(40);
-  Serial.print("adter SSID");
-  delay(5000);
-  WifiPW = readEEPROMString(70);
-  delay(5000);
+  Serial.println("adter SSID");
+  //delay(5000);
+  //WifiPW = readEEPROMString(70);
+  //delay(5000);
   
   // Set mode to both AP and station
   WiFi.mode(WIFI_AP_STA);
@@ -333,11 +338,8 @@ void setup() {
   WiFi.softAP(softAP_ssid, softAP_pw);
  
   // Connect to WIFI
-  WiFi.begin(SSID, WifiPW);
-  delay(2500);
-  Serial.print("Connecting");
-  delay(2500);
-  //connectToWifi()
+  connectToWifi();
+
   localIP = IpAddress2String(WiFi.localIP());
   Serial.println(localIP);
   Serial.print("Connected, AP IP address: ");
@@ -375,10 +377,14 @@ String readEEPROMString(char address)
     data[i]=c;
     i++;
   }
-  //data[i]='\0';             // Add zero-terminator at end
+  //data[i-1]='\0';             // Add zero-terminator at end
+  String str = String(data);
+  int l = str.length();
+  str = str.substring(0,l-1);
   Serial.print("Readstring: ");
-  Serial.println(String(data));
-  return String(data);
+  Serial.println(str);
+  delay(500);
+  return str;
 }
 
 void loop() {
